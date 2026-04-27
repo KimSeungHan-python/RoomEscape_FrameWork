@@ -7,26 +7,66 @@
 #include "DungeonGenerator.generated.h"
 
 class ACPP_DungeonRoom1;
+class ARoomBase;
+class AClosingWall;
+class ADoor;
 
 UCLASS()
 class ROOMESCAPE_FRAMEWORK_API ADungeonGenerator : public AActor
 {
 	GENERATED_BODY()
 	
-public:	
-	// Sets default values for this actor's properties
-	ADungeonGenerator();
-
-public:
-	// Called every frame
-	virtual void Tick(float DeltaTime) override;
-
-	UPROPERTY(VisibleAnywhere, Category = "Rooms")
-	TSubclassOf<ACPP_DungeonRoom1> StartRoom; // Why TSubClassOf -> Do Thinking
 
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
+
+public:	
+	// Sets default values for this actor's properties
+	ADungeonGenerator();
+
+	// Called every frame
+	virtual void Tick(float DeltaTime) override;
+
+	UPROPERTY(EditAnywhere, Category = "Rooms")
+	TSubclassOf<ACPP_DungeonRoom1> StartRoom; // Why TSubClassOf -> Do Thinking
+
+	UPROPERTY(EditAnywhere, Category = "Rooms")
+	TArray<TSubclassOf<ARoomBase>> RoomsToBeSpawned;
+
+	UPROPERTY(EditAnywhere, Category = "UnusedExitWall")
+	TSubclassOf<AClosingWall> ClosingWall;
+
+	UPROPERTY(EditAnywhere, Category = "Door")
+	TSubclassOf<ADoor> Door;
+	
+	UPROPERTY(EditAnywhere, Category = "Dungeon Info")
+	int32 RoomAmount;
+
+	ARoomBase* LatestSpawnedRoom;
+
+	bool bCanSpawn;
+
+	TArray<USceneComponent*> Exits;
+
+	TArray<USceneComponent*> DoorList;
+
+	FRandomStream RandomStream;
+
+	UPROPERTY(EditAnywhere, Category = "Dungeon Info")
+	int32 Seed;
+
+	void SetSeed();
+
+	void MyFunctionAfterDelay(); //Temporary function
+	FTimerHandle TimerHandle;
+
+	void SpawnStarterRoom();
+	void SpawnNextRoom();
+	void RemoveOverlappingRooms();
+	void CloseUnusedExits();
+	void SpawnDoors();
+
 
 
 

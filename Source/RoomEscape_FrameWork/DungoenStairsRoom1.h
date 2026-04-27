@@ -3,74 +3,70 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GameFramework/Actor.h"
-#include "RoomBase.generated.h"
+#include "RoomBase.h"
+#include "DungoenStairsRoom1.generated.h"
 
-
-class UBoxComponent;
-class UArrowComponent;
+/**
+ * 
+ */
 UCLASS()
-class ROOMESCAPE_FRAMEWORK_API ARoomBase : public AActor
+class ROOMESCAPE_FRAMEWORK_API ADungoenStairsRoom1 : public ARoomBase
 {
 	GENERATED_BODY()
 	
-public:	
-	// Sets default values for this actor's properties
-	ARoomBase();
-
-	virtual void Tick(float DeltaTime) override;
-
-	UPROPERTY(VisibleAnywhere, Category = "Components")
-	USceneComponent* ExitPointFolder;
-
-	UPROPERTY(VisibleAnywhere, Category = "Components")
-	USceneComponent* OverlapFolder;
+public:
+	ADungoenStairsRoom1();
 
 protected:
-	// Called when the game starts or when spawned
-	virtual void BeginPlay() override;
-	
-	UPROPERTY(VisibleAnywhere, Category = "Components")
-	USceneComponent* DefaultSceneRoot;
 
 	UPROPERTY(VisibleAnywhere, Category = "Components")
-	USceneComponent* GeometryFolder;
-
-
-
-
+	UArrowComponent* Exit_Arrow_1;
 
 	UPROPERTY(VisibleAnywhere, Category = "Components")
-	UStaticMeshComponent* Cube_1;
+	UArrowComponent* Exit_Arrow_2;
 
 	UPROPERTY(VisibleAnywhere, Category = "Components")
-	UStaticMeshComponent* Cube_2;
+	UArrowComponent* Exit_Arrow_3;
 
 	UPROPERTY(VisibleAnywhere, Category = "Components")
-	UStaticMeshComponent* Cube_3;
+	UArrowComponent* Exit_Arrow_4;
 
 	UPROPERTY(VisibleAnywhere, Category = "Components")
-	UStaticMeshComponent* Cube_4;
+	UStaticMeshComponent* Floor_2;
 
 	UPROPERTY(VisibleAnywhere, Category = "Components")
-	UStaticMeshComponent* Cube_5;
+	UStaticMeshComponent* SecondF_Wall_1;
 
 	UPROPERTY(VisibleAnywhere, Category = "Components")
-	UStaticMeshComponent* Cube_6;
+	UStaticMeshComponent* SecondF_Wall_2;
 
 	UPROPERTY(VisibleAnywhere, Category = "Components")
-	UStaticMeshComponent* Cube_7;
+	UStaticMeshComponent* SecondF_Wall_3;
 
 	UPROPERTY(VisibleAnywhere, Category = "Components")
-	UStaticMeshComponent* Cube_8;
+	UStaticMeshComponent* SecondF_Wall_4;
 
 	UPROPERTY(VisibleAnywhere, Category = "Components")
-	UStaticMeshComponent* Floor;
+	UStaticMeshComponent* SecondF_Wall_5;
 
 	UPROPERTY(VisibleAnywhere, Category = "Components")
-	UBoxComponent* BoxCollision;
+	UStaticMeshComponent* SecondF_Wall_6;
 
 	UPROPERTY(VisibleAnywhere, Category = "Components")
-	UArrowComponent* Arrow;
+	UStaticMeshComponent* SecondF_Wall_7;
 
+	UPROPERTY(VisibleAnywhere, Category = "Components")
+	UStaticMeshComponent* SecondF_Wall_8;
+
+	UPROPERTY(VisibleAnywhere, Category = "Components")
+	UStaticMeshComponent* ClosingWall_1;
+
+	UPROPERTY(VisibleAnywhere, Category = "Components")
+	UStaticMeshComponent* ClosingWall_2;
+
+	UPROPERTY(VisibleAnywhere, Category = "Components")
+	UStaticMeshComponent* ClosingWall_3;
+
+	UPROPERTY(VisibleAnywhere, Category = "Components")
+	UStaticMeshComponent* Stairs;
 };
