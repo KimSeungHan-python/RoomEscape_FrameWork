@@ -7,6 +7,9 @@
 
 ADungeonElevatorRoom::ADungeonElevatorRoom()
 {
+	//문이랑 같은 방식으로 만들면 됨 BeginOverlap사용해서 플레이어에서 체크하면 됨 그리고 태그 활용해서 
+	PrimaryActorTick.bCanEverTick = true;
+
 	Exit_Arrow_1 = CreateDefaultSubobject<UArrowComponent>(TEXT("Exit_Arrow_1"));
 	Exit_Arrow_2 = CreateDefaultSubobject<UArrowComponent>(TEXT("Exit_Arrow_2"));
 	Exit_Arrow_3 = CreateDefaultSubobject<UArrowComponent>(TEXT("Exit_Arrow_3"));
@@ -60,4 +63,35 @@ ADungeonElevatorRoom::ADungeonElevatorRoom()
 	Elevator->SetupAttachment(GeometryFolder);
 	ElevatorCollision->SetupAttachment(Elevator);
 
+}
+
+void ADungeonElevatorRoom::BeginPlay()
+{
+	Super::BeginPlay();
+	
+	StartLocation = Elevator->GetRelativeLocation();
+}
+
+void ADungeonElevatorRoom::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+
+	CurrentLocation = Elevator->GetRelativeLocation();
+	if (bShouldMove)
+	{
+		FVector NewLocation = FMath::VInterpTo(CurrentLocation, EndLocation, DeltaTime, MoveSpeed);
+		Elevator->SetRelativeLocation(NewLocation);
+	}
+}
+
+void ADungeonElevatorRoom::GoUp()
+{
+	EndLocation = CurrentLocation + FVector(0, 0, 1500.0f);
+	bShouldMove = true;
+}
+
+void ADungeonElevatorRoom::GoDown()
+{
+	EndLocation = StartLocation;
+	bShouldMove = false;
 }

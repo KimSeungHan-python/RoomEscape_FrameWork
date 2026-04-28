@@ -10,6 +10,8 @@ class ACPP_DungeonRoom1;
 class ARoomBase;
 class AClosingWall;
 class ADoor;
+class ASpawnItemBase;
+class ATreasureChestBase;
 
 UCLASS()
 class ROOMESCAPE_FRAMEWORK_API ADungeonGenerator : public AActor
@@ -39,7 +41,19 @@ public:
 
 	UPROPERTY(EditAnywhere, Category = "Door")
 	TSubclassOf<ADoor> Door;
+
+	UPROPERTY(EditAnywhere, Category = "SpawnItem")
+	TSubclassOf<ASpawnItemBase> ItemSpawnBase;
+
+	UPROPERTY(EditAnywhere, Category = "TreasureChest")
+	TSubclassOf<ATreasureChestBase> TreasureChestBase;
 	
+	UPROPERTY(EditAnywhere, Category = "Dungeon Info")
+	int32 ItemAmount;
+
+	UPROPERTY(EditAnywhere, Category = "Dungeon Info")
+	int32 ChestAmount;
+
 	UPROPERTY(EditAnywhere, Category = "Dungeon Info")
 	int32 RoomAmount;
 
@@ -50,6 +64,11 @@ public:
 	TArray<USceneComponent*> Exits;
 
 	TArray<USceneComponent*> DoorList;
+
+	TArray<USceneComponent*> SpawnPoints;
+
+	TArray<USceneComponent*> LatestRoomSpawnPoints;
+
 
 	FRandomStream RandomStream;
 
@@ -66,7 +85,8 @@ public:
 	void RemoveOverlappingRooms();
 	void CloseUnusedExits();
 	void SpawnDoors();
-
+	void SpawnItems();	
+	void SpawnChests();
 
 
 

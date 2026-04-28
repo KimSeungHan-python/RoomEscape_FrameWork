@@ -19,7 +19,13 @@ class ROOMESCAPE_FRAMEWORK_API ADungeonElevatorRoom : public ARoomBase
 public:
 	ADungeonElevatorRoom();
 
+
+
 protected:
+
+	virtual void BeginPlay() override;
+
+	virtual void Tick(float DeltaTime) override;
 
 	UPROPERTY(VisibleAnywhere, Category = "Components")
 	UArrowComponent* Exit_Arrow_1;
@@ -87,4 +93,18 @@ protected:
 	
 	UPROPERTY(VisibleAnywhere, Category = "Components")
 	UBoxComponent* ElevatorCollision;
+
+	FVector StartLocation;
+
+	FVector EndLocation;
+
+	bool bShouldMove;
+
+	float MoveSpeed = 10.0f;
+
+	FVector CurrentLocation;
+
+public:
+	void GoUp();
+	void GoDown();
 };

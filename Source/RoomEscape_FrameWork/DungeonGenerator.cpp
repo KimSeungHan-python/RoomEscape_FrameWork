@@ -7,6 +7,8 @@
 #include "Components/BoxComponent.h"
 #include "ClosingWall.h"
 #include "Door.h"
+#include "SpawnItemBase.h"
+#include "TreasureChestBase.h"
 
 // Sets default values
 ADungeonGenerator::ADungeonGenerator()
@@ -69,7 +71,12 @@ void ADungeonGenerator::SpawnStarterRoom()
 	SpawnedStarterRoom->SetActorLocation(this->GetActorLocation());
 	
 	SpawnedStarterRoom->ExitPointFolder->GetChildrenComponents(false, Exits);//Get Arrow
+
+	SpawnedStarterRoom->FloorSpawnPoints->GetChildrenComponents(false, SpawnPoints);
 }
+
+
+
 
 void ADungeonGenerator::SpawnNextRoom()// 방번호랑 (방 전체 화살표 중에 어디로 생길지 랜덤으로 정함 그리고 스포할 수 없으면)
 {
@@ -88,6 +95,9 @@ void ADungeonGenerator::SpawnNextRoom()// 방번호랑 (방 전체 화살표 중에 어디로 �
 	LatestSpawnedRoom->SetActorRotation(SelectedExitPoint->GetComponentRotation());
 
 	UE_LOG(LogTemp, Warning, TEXT("Spawned Room Name: %s"), *LatestSpawnedRoom->GetName());
+
+	LatestSpawnedRoom->FloorSpawnPoints->GetChildrenComponents(false, LatestRoomSpawnPoints);
+	SpawnPoints.Append(LatestRoomSpawnPoints);
 
 
 	RemoveOverlappingRooms();
@@ -169,6 +179,27 @@ void ADungeonGenerator::SpawnDoors()
 		LatestDoorSpawned->SetActorRotation(FRotator(Element->GetComponentRotation()) + FRotator(0.0f, 90.0f, 0.0f));
 		
 	}
+}
+
+void ADungeonGenerator::SpawnItems()// 나중에 아이템들이 아닌 각 아이템 개수로도 가능할듯
+{
+	if (ItemAmount > 0)
+	{
+		USceneComponent* SelectedSpawnPoint;
+		int32 SpawnPointIndex = RandomStream.RandRange(0, SpawnPoints.Num() - 1);// 생성된 룸에서 스폰 포인트들
+		USceneComponent* SelectedExitPoint = Exits[SpawnPointIndex];
+
+		ASpawnItemBase* LatestItemSpawned = this->GetWorld()->SpawnActor<ASpawnItemBase>(ItemSpawnBase);
+
+
+
+		ItemAmount = ItemAmount - 1;
+	}
+}
+
+void ADungeonGenerator::SpawnChests()
+{
+
 }
 
 

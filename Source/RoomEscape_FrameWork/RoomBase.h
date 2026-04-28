@@ -26,6 +26,9 @@ public:
 	UPROPERTY(VisibleAnywhere, Category = "Components")
 	USceneComponent* OverlapFolder;
 
+	UPROPERTY(VisibleAnywhere, Category = "Components")
+	USceneComponent* FloorSpawnPoints;
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -35,9 +38,6 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, Category = "Components")
 	USceneComponent* GeometryFolder;
-
-
-
 
 
 	UPROPERTY(VisibleAnywhere, Category = "Components")
