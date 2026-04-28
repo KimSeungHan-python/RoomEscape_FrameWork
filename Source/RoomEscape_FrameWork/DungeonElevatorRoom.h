@@ -6,6 +6,8 @@
 #include "RoomBase.h"
 #include "DungeonElevatorRoom.generated.h"
 
+
+class UBoxComponent;
 /**
  * 
  */
@@ -32,7 +34,16 @@ protected:
 	UArrowComponent* Exit_Arrow_4;
 
 	UPROPERTY(VisibleAnywhere, Category = "Components")
+	UStaticMeshComponent* Floor_1;
+
+	UPROPERTY(VisibleAnywhere, Category = "Components")
 	UStaticMeshComponent* Floor_2;
+
+	UPROPERTY(VisibleAnywhere, Category = "Components")
+	UStaticMeshComponent* Floor_3;
+
+	UPROPERTY(VisibleAnywhere, Category = "Components")
+	UStaticMeshComponent* Floor_4;
 
 	UPROPERTY(VisibleAnywhere, Category = "Components")
 	UStaticMeshComponent* SecondF_Wall_1;
@@ -69,5 +80,11 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, Category = "Components")
 	UStaticMeshComponent* Elevator;
+
+
+	UPROPERTY(VisibleAnywhere, Category = "Components")
+	UStaticMeshComponent* Platform;
 	
+	UPROPERTY(VisibleAnywhere, Category = "Components")
+	UBoxComponent* ElevatorCollision;
 };

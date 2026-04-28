@@ -21,14 +21,14 @@ ADungeonGenerator::ADungeonGenerator()
 void ADungeonGenerator::BeginPlay()
 {
 	Super::BeginPlay();
-
+	SetSeed();
 
 	SpawnStarterRoom();
 	SpawnNextRoom();
 	FTimerHandle UnusedHandle;
 	FTimerHandle DoorHandle;
 
-	SetSeed();
+
 
 	GetWorld()->GetTimerManager().SetTimer(UnusedHandle, this, &ADungeonGenerator::CloseUnusedExits, 1.0f, false);
 	GetWorld()->GetTimerManager().SetTimer(DoorHandle, this, &ADungeonGenerator::SpawnDoors, 1.0f, false);
@@ -71,7 +71,7 @@ void ADungeonGenerator::SpawnStarterRoom()
 	SpawnedStarterRoom->ExitPointFolder->GetChildrenComponents(false, Exits);//Get Arrow
 }
 
-void ADungeonGenerator::SpawnNextRoom()
+void ADungeonGenerator::SpawnNextRoom()// 방번호랑 (방 전체 화살표 중에 어디로 생길지 랜덤으로 정함 그리고 스포할 수 없으면)
 {
 	bCanSpawn = true;
 
@@ -83,36 +83,35 @@ void ADungeonGenerator::SpawnNextRoom()
 	LatestSpawnedRoom = this->GetWorld()->SpawnActor<ARoomBase>(RoomsToBeSpawned[RoomIndex]);
 
 
-	if (LatestSpawnedRoom)
+
+	LatestSpawnedRoom->SetActorLocation(SelectedExitPoint->GetComponentLocation()); // why no spawn? <- meshes didn't included
+	LatestSpawnedRoom->SetActorRotation(SelectedExitPoint->GetComponentRotation());
+
+	UE_LOG(LogTemp, Warning, TEXT("Spawned Room Name: %s"), *LatestSpawnedRoom->GetName());
+
+
+	RemoveOverlappingRooms();
+
+
+	if (bCanSpawn)
 	{
-		LatestSpawnedRoom->SetActorLocation(SelectedExitPoint->GetComponentLocation()); // why no spawn? <- meshes didn't included
-		LatestSpawnedRoom->SetActorRotation(SelectedExitPoint->GetComponentRotation());
-
-		UE_LOG(LogTemp, Warning, TEXT("Spawned Room Name: %s"), *LatestSpawnedRoom->GetName());
-
 		DoorList.Add(SelectedExitPoint);//Set Door SelectedExitPoint
+		Exits.Remove(SelectedExitPoint);//Previous Point Remove
 
+		TArray<USceneComponent*> LatestRoomExitPoints;
+		LatestSpawnedRoom->ExitPointFolder->GetChildrenComponents(false, LatestRoomExitPoints);//Change Arrow Components from Next Room
+		Exits.Append(LatestRoomExitPoints); // I think it also not good Maybe change this for later.
 
-		RemoveOverlappingRooms();
-
-
-
-		if (bCanSpawn)
-		{
-			Exits.Remove(SelectedExitPoint);//Previous Point Remove
-
-			TArray<USceneComponent*> LatestRoomExitPoints;
-			LatestSpawnedRoom->ExitPointFolder->GetChildrenComponents(false, LatestRoomExitPoints);//Change Arrow Components from Next Room
-			Exits.Append(LatestRoomExitPoints); // I think it also not good Maybe change this for later.
-
-			//Now Logics have overlap Spawning Problem, so it have to be changed
-		}
-
+		//Now Logics have overlap Spawning Problem, so it have to be changed
 		RoomAmount = RoomAmount - 1;
-		if (RoomAmount > 0)
-		{
-			SpawnNextRoom();// It is not good in my opinion
-		}
+		UE_LOG(LogTemp, Warning, TEXT("%d"), RoomAmount);
+
+	}
+
+	
+	if (RoomAmount > 0)
+	{
+		SpawnNextRoom();// It is not good in my opinion
 	}
 
 
@@ -121,18 +120,18 @@ void ADungeonGenerator::SpawnNextRoom()
 void ADungeonGenerator::RemoveOverlappingRooms()// must to understand it!!!!
 {
 	TArray<USceneComponent*> OverlappedRooms;
-	LatestSpawnedRoom->OverlapFolder->GetChildrenComponents(false, OverlappedRooms);// Box Collision
-
+	LatestSpawnedRoom->OverlapFolder->GetChildrenComponents(false, OverlappedRooms);// 마지막 생성된 방의 박스 콜리전을 가져옴, OverlappedRooms에 계속 추가됨 
+																					// OverlappedRooms에 가져온 충돌(박스콜리전)을 넣어줌
 	TArray<UPrimitiveComponent*> OverlappingComponents;
 	for (USceneComponent* Element : OverlappedRooms)
 	{
-		Cast<UBoxComponent>(Element)->GetOverlappingComponents(OverlappingComponents);
+		Cast<UBoxComponent>(Element)->GetOverlappingComponents(OverlappingComponents); //거기서 실제로 겹침이 일어난 것들을가져옴
 	}
 
 	for (UPrimitiveComponent* Element : OverlappingComponents)
 	{
-		bCanSpawn = false;//; why do this?
-		RoomAmount = RoomAmount + 1;
+		bCanSpawn = false;//; why do this? -> can't spawn if false
+		//RoomAmount = RoomAmount + 1;
 		LatestSpawnedRoom->Destroy();
 	}
 
@@ -158,6 +157,7 @@ void ADungeonGenerator::SpawnDoors()
 	//GetCapsuleComponent()->OnComponentEndOverlap.AddDynamic(this,&ACharacter::OnEndOverlap);
 	//Use tag and UFUNCTION()
 	//Use Cast<ADoor>
+	UE_LOG(LogTemp, Warning, TEXT("Spawn_Door"));
 	for (USceneComponent* Element : DoorList)// Player can open door by BeginOverlap
 	{
 		ADoor* LatestDoorSpawned = GetWorld()->SpawnActor<ADoor>(Door);// How to Change Something can interact or just Open<- Thinking  
@@ -167,6 +167,7 @@ void ADungeonGenerator::SpawnDoors()
 
 		LatestDoorSpawned->SetActorLocation(Element->GetComponentLocation() + RelativeOffset);//Why WorldOffset?
 		LatestDoorSpawned->SetActorRotation(FRotator(Element->GetComponentRotation()) + FRotator(0.0f, 90.0f, 0.0f));
+		
 	}
 }
 
