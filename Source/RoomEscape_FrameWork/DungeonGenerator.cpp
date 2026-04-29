@@ -9,6 +9,9 @@
 #include "Door.h"
 #include "SpawnItemBase.h"
 #include "TreasureChestBase.h"
+#include "BossRoom.h"
+#include "Kismet/GameplayStatics.h"
+#include "StarterRoom.h"
 
 // Sets default values
 ADungeonGenerator::ADungeonGenerator()
@@ -27,14 +30,30 @@ void ADungeonGenerator::BeginPlay()
 
 	SpawnStarterRoom();
 	SpawnNextRoom();
-	FTimerHandle UnusedHandle;
-	FTimerHandle DoorHandle;
 
 
+}
 
-	GetWorld()->GetTimerManager().SetTimer(UnusedHandle, this, &ADungeonGenerator::CloseUnusedExits, 1.0f, false);
-	GetWorld()->GetTimerManager().SetTimer(DoorHandle, this, &ADungeonGenerator::SpawnDoors, 1.0f, false);
-	//MyFunctionAfterDelay();
+// Called every frame
+void ADungeonGenerator::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+
+	if (bDungeonRoomComplete)
+	{
+		//방이 전부 생성되고 나서 생성이 되어야함.
+		for (USceneComponent* Element : SpawnPoints)
+		{
+			SpawnItems();
+			SpawnChests();
+		}
+		CloseUnusedExits();
+		SpawnDoors();
+		//GetWorld()->GetTimerManager().SetTimer(UnusedHandle, this, &ADungeonGenerator::CloseUnusedExits, 1.0f, false);
+		//GetWorld()->GetTimerManager().SetTimer(DoorHandle, this, &ADungeonGenerator::SpawnDoors, 1.0f, false);
+		bDungeonRoomComplete = false;
+	}
+
 }
 
 void ADungeonGenerator::SetSeed()// Why make this? -> Answer: Same Seed = Same Map
@@ -67,10 +86,13 @@ void ADungeonGenerator::MyFunctionAfterDelay()
 
 void ADungeonGenerator::SpawnStarterRoom()
 {
-	ACPP_DungeonRoom1* SpawnedStarterRoom = this->GetWorld()->SpawnActor<ACPP_DungeonRoom1>(StartRoom);
+	AStarterRoom* SpawnedStarterRoom = this->GetWorld()->SpawnActor<AStarterRoom>(StartRoom);
 	SpawnedStarterRoom->SetActorLocation(this->GetActorLocation());
 	
 	SpawnedStarterRoom->ExitPointFolder->GetChildrenComponents(false, Exits);//Get Arrow
+
+	SpawnedStarterRoom->ExitPointFolder->GetChildrenComponents(false, ClosingUnusedExitsList);//Get Arrow
+	LatestRoomUnusedExitsList.Append(ClosingUnusedExitsList);
 
 	SpawnedStarterRoom->FloorSpawnPoints->GetChildrenComponents(false, SpawnPoints);
 }
@@ -81,13 +103,30 @@ void ADungeonGenerator::SpawnStarterRoom()
 void ADungeonGenerator::SpawnNextRoom()// 방번호랑 (방 전체 화살표 중에 어디로 생길지 랜덤으로 정함 그리고 스포할 수 없으면)
 {
 	bCanSpawn = true;
+	bCanUseSpawnPoints = true;//원하는 곳에 보스룸 만들기 위해
+
+	if (RoomAmount == 1)
+	{
+		bCanUseSpawnPoints = false;
+	}
+
+	if (RoomAmount % 10 == 0)//여기 잘 활용해서 사용하면 될듯 스페셜이나 보스룸
+	{
+		int32 SpecialRoomIndex = RandomStream.RandRange(0, SpecialRoomsToBeSpawned.Num() - 1);
+		LatestSpawnedRoom = this->GetWorld()->SpawnActor<ARoomBase>(RoomsToBeSpawned[SpecialRoomIndex]);
+	}
+	else
+	{
+		
+	}
 
 	int32 RoomIndex = RandomStream.RandRange(0, RoomsToBeSpawned.Num() - 1);
+	LatestSpawnedRoom = this->GetWorld()->SpawnActor<ARoomBase>(RoomsToBeSpawned[RoomIndex]);
+
 	int32 ExitIndex = RandomStream.RandRange(0, Exits.Num() - 1);
-	USceneComponent* SelectedExitPoint = Exits[ExitIndex];
+	SelectedExitPoint = Exits[ExitIndex];//화살표임 SelectedExitPoint는 
 
 	//if(RoomsToBeSpawned)
-	LatestSpawnedRoom = this->GetWorld()->SpawnActor<ARoomBase>(RoomsToBeSpawned[RoomIndex]);
 
 
 
@@ -96,60 +135,100 @@ void ADungeonGenerator::SpawnNextRoom()// 방번호랑 (방 전체 화살표 중에 어디로 �
 
 	UE_LOG(LogTemp, Warning, TEXT("Spawned Room Name: %s"), *LatestSpawnedRoom->GetName());
 
-	LatestSpawnedRoom->FloorSpawnPoints->GetChildrenComponents(false, LatestRoomSpawnPoints);
-	SpawnPoints.Append(LatestRoomSpawnPoints);
+	//방 생성을 해줌(위치랑 회전)
 
 
-	RemoveOverlappingRooms();
+
+	RemoveOverlappingRooms();// 겹치면 삭제하고 다시 만들게 함
 
 
-	if (bCanSpawn)
+	if (bCanSpawn)//이걸 통과해야지 실제로 맵에 생성이 됨
 	{
+		//Items
+		if (bCanUseSpawnPoints) // 이 방식은 RoomAmount가 하나 남았을때인데 다른방식으로 수정해야할듯 조건문을 보스방이라면 
+		{
+			LatestSpawnedRoom->FloorSpawnPoints->GetChildrenComponents(false, LatestRoomSpawnPoints);
+			SpawnPoints.Append(LatestRoomSpawnPoints);//아이템이나 Chest 생성 포인트들 
+		}
+
+
+		//Doors
 		DoorList.Add(SelectedExitPoint);//Set Door SelectedExitPoint
+
+
+
 		Exits.Remove(SelectedExitPoint);//Previous Point Remove
 
+		if (bLinearDungeon)//여기서 초기화 해주는거지 개꿀 따라시 
+		{
+			Exits.Empty(); // 새로 생성된 방을 제외하고 이전에 가지고 있던 것들을 없앰, 그래서 ClosingUnusedExitsList가 모든 것을 들고 있게 위임됨.
+		}
+
+		LatestRoomUnusedExitsList.Remove(SelectedExitPoint);
+		LatestSpawnedRoom->ExitPointFolder->GetChildrenComponents(false, ClosingUnusedExitsList);//아무래도 GetChildrenComponents 두번쨰 인자는 저장공간인듯<- 이거 아닌듯 수정한거 보니까
+		LatestRoomUnusedExitsList.Append(ClosingUnusedExitsList);
+
 		TArray<USceneComponent*> LatestRoomExitPoints;
-		LatestSpawnedRoom->ExitPointFolder->GetChildrenComponents(false, LatestRoomExitPoints);//Change Arrow Components from Next Room
+		LatestSpawnedRoom->ExitPointFolder->GetChildrenComponents(false, LatestRoomExitPoints);//생성된 룸에서 방이 생길 수 있는 화살표(들)를 가져옴
 		Exits.Append(LatestRoomExitPoints); // I think it also not good Maybe change this for later.
 
 		//Now Logics have overlap Spawning Problem, so it have to be changed
 		RoomAmount = RoomAmount - 1;
 		UE_LOG(LogTemp, Warning, TEXT("%d"), RoomAmount);
 
+		SpawnedRooms.Add(LatestSpawnedRoom);
 	}
 
 	
 	if (RoomAmount > 0)
 	{
-		SpawnNextRoom();// It is not good in my opinion
+		//SpawnNextRoom();// It is not good in my opinion 재귀이기 때문에
+		GetWorld()->GetTimerManager().SetTimer(SpawningRoomHandle, this, &ADungeonGenerator::SpawnNextRoom, 0.01f, false);
+	}
+	else
+	{
+		bDungeonRoomComplete = true;
 	}
 
 
 }
 
-void ADungeonGenerator::RemoveOverlappingRooms()// must to understand it!!!!
+void ADungeonGenerator::RemoveOverlappingRooms()// must to understand it!!!! 겹침이 일어나면 마지막에 스폰된 방을 지움 
 {
-	TArray<USceneComponent*> OverlappedRooms;
-	LatestSpawnedRoom->OverlapFolder->GetChildrenComponents(false, OverlappedRooms);// 마지막 생성된 방의 박스 콜리전을 가져옴, OverlappedRooms에 계속 추가됨 
+	TArray<USceneComponent*> OverlapBoxComponents;
+	LatestSpawnedRoom->OverlapFolder->GetChildrenComponents(false, OverlapBoxComponents);// 마지막 생성된 방의 박스 콜리전을 가져옴, OverlappedRooms에 계속 추가됨 
 																					// OverlappedRooms에 가져온 충돌(박스콜리전)을 넣어줌
-	TArray<UPrimitiveComponent*> OverlappingComponents;
-	for (USceneComponent* Element : OverlappedRooms)
+	//TArray<UPrimitiveComponent*> OverlappingComponents;
+	for (USceneComponent* Element : OverlapBoxComponents)
 	{
-		Cast<UBoxComponent>(Element)->GetOverlappingComponents(OverlappingComponents); //거기서 실제로 겹침이 일어난 것들을가져옴
+		for (ARoomBase* Room : SpawnedRooms)
+		{
+			if (Cast<UBoxComponent>(Element)->IsOverlappingActor(Room))
+			{
+				bCanSpawn = false;
+				LatestSpawnedRoom->Destroy();
+				if (bLinearDungeon)
+				{
+					RestartDungeon();
+				}
+			}
+		}
+
+		//Cast<UBoxComponent>(Element)->GetOverlappingComponents(OverlappingComponents); //거기서 실제로 겹침이 일어난 것들을가져옴 // 왜 삭제하는 것이지?
 	}
 
-	for (UPrimitiveComponent* Element : OverlappingComponents)
-	{
-		bCanSpawn = false;//; why do this? -> can't spawn if false
-		//RoomAmount = RoomAmount + 1;
-		LatestSpawnedRoom->Destroy();
-	}
+	//for (UPrimitiveComponent* Element : OverlappingComponents)// 왜 삭제하는것이지?
+	//{
+	//	bCanSpawn = false;//; why do this? -> can't spawn if false
+	//	//RoomAmount = RoomAmount + 1;
+	//	LatestSpawnedRoom->Destroy();
+	//}
 
 }
 
 void ADungeonGenerator::CloseUnusedExits()
 {
-	for (USceneComponent* Element : Exits)
+	for (USceneComponent* Element : LatestRoomUnusedExitsList)
 	{
 		AClosingWall* LatestClosingWallSpawned = GetWorld()->SpawnActor<AClosingWall>(ClosingWall);
 
@@ -187,11 +266,12 @@ void ADungeonGenerator::SpawnItems()// 나중에 아이템들이 아닌 각 아이템 개수로도
 	{
 		USceneComponent* SelectedSpawnPoint;
 		int32 SpawnPointIndex = RandomStream.RandRange(0, SpawnPoints.Num() - 1);// 생성된 룸에서 스폰 포인트들
-		USceneComponent* SelectedExitPoint = Exits[SpawnPointIndex];
+		SelectedSpawnPoint = SpawnPoints[SpawnPointIndex];
 
 		ASpawnItemBase* LatestItemSpawned = this->GetWorld()->SpawnActor<ASpawnItemBase>(ItemSpawnBase);
+		LatestItemSpawned->SetActorLocation(SelectedSpawnPoint->GetComponentLocation() + FVector(0, 0, 100.0f));
 
-
+		SpawnPoints.Remove(SelectedSpawnPoint);//왜 . 이지 ->게 아니라
 
 		ItemAmount = ItemAmount - 1;
 	}
@@ -199,15 +279,42 @@ void ADungeonGenerator::SpawnItems()// 나중에 아이템들이 아닌 각 아이템 개수로도
 
 void ADungeonGenerator::SpawnChests()
 {
+	if (ChestAmount > 0)
+	{
+		USceneComponent* SelectedSpawnPoint;
+		int32 SpawnPointIndex = RandomStream.RandRange(0, SpawnPoints.Num() - 1);// 생성된 룸에서 스폰 포인트들
+		SelectedSpawnPoint = SpawnPoints[SpawnPointIndex];
 
+		ATreasureChestBase* LatestChestSpawned = this->GetWorld()->SpawnActor<ATreasureChestBase>(ItemSpawnBase);
+		LatestChestSpawned->SetActorLocation(SelectedSpawnPoint->GetComponentLocation() + FVector(0, 0, 100.0f));
+
+		SpawnPoints.Remove(SelectedSpawnPoint);//왜 . 이지 ->게 아니라
+
+		ChestAmount = ChestAmount - 1;
+	}
 }
 
-
-
-// Called every frame
-void ADungeonGenerator::Tick(float DeltaTime)
+void ADungeonGenerator::SpawnBossRoom()
 {
-	Super::Tick(DeltaTime);
+	// 마지막에 생성된 방을 없애고 만들어버림
+	// 마지막에 생성된 방을 없애고 있기 때문에 고민을 해야됨. 목표는 마지막 방에는 정해진 아이템이 떨어지게 만들고 싶음
+	ABossRoom* BossRoom = this->GetWorld()->SpawnActor<ABossRoom>(BossRoomToBeSpawned);
+	
+	BossRoom->SetActorLocation(SelectedExitPoint->GetComponentLocation());
+	BossRoom->SetActorRotation(SelectedExitPoint->GetComponentRotation());
+
+
+	LatestSpawnedRoom->Destroy();
 
 }
+
+void ADungeonGenerator::RestartDungeon()
+{
+	FName CurrentLevel = GetWorld()->GetFName();//이건 뭐냐?
+	UGameplayStatics::OpenLevel(GetWorld(), CurrentLevel);
+}
+
+
+
+
 

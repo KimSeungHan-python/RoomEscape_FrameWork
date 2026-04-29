@@ -12,6 +12,8 @@ class AClosingWall;
 class ADoor;
 class ASpawnItemBase;
 class ATreasureChestBase;
+class ABossRoom;
+class AStarterRoom;
 
 UCLASS()
 class ROOMESCAPE_FRAMEWORK_API ADungeonGenerator : public AActor
@@ -31,10 +33,16 @@ public:
 	virtual void Tick(float DeltaTime) override;
 
 	UPROPERTY(EditAnywhere, Category = "Rooms")
-	TSubclassOf<ACPP_DungeonRoom1> StartRoom; // Why TSubClassOf -> Do Thinking
+	TSubclassOf<AStarterRoom> StartRoom; // Why TSubClassOf -> Do Thinking
 
 	UPROPERTY(EditAnywhere, Category = "Rooms")
 	TArray<TSubclassOf<ARoomBase>> RoomsToBeSpawned;
+
+	UPROPERTY(EditAnywhere, Category = "Rooms")
+	TArray<TSubclassOf<ARoomBase>> SpecialRoomsToBeSpawned;
+
+	UPROPERTY(EditAnywhere, Category = "Rooms")
+	TSubclassOf<ABossRoom> BossRoomToBeSpawned;
 
 	UPROPERTY(EditAnywhere, Category = "UnusedExitWall")
 	TSubclassOf<AClosingWall> ClosingWall;
@@ -57,9 +65,14 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Dungeon Info")
 	int32 RoomAmount;
 
+	UPROPERTY(EditAnywhere, Category = "Dungeon Info")
+	bool bLinearDungeon; // 일자형 던전인지 
+
 	ARoomBase* LatestSpawnedRoom;
 
 	bool bCanSpawn;
+
+	USceneComponent* SelectedExitPoint;
 
 	TArray<USceneComponent*> Exits;
 
@@ -69,11 +82,26 @@ public:
 
 	TArray<USceneComponent*> LatestRoomSpawnPoints;
 
+	TArray<ARoomBase*> SpawnedRooms;
+
+	TArray<USceneComponent*> ClosingUnusedExitsList;
+
+	TArray<USceneComponent*> LatestRoomUnusedExitsList;
+
 
 	FRandomStream RandomStream;
 
 	UPROPERTY(EditAnywhere, Category = "Dungeon Info")
 	int32 Seed;
+
+	FTimerHandle SpawningRoomHandle;
+
+	bool bDungeonRoomComplete = false;
+
+	bool bCanUseSpawnPoints = false;
+
+	FTimerHandle UnusedHandle;
+	FTimerHandle DoorHandle;
 
 	void SetSeed();
 
@@ -87,7 +115,8 @@ public:
 	void SpawnDoors();
 	void SpawnItems();	
 	void SpawnChests();
-
+	void SpawnBossRoom();
+	void RestartDungeon();
 
 
 };
