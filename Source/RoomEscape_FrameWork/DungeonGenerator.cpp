@@ -44,11 +44,11 @@ void ADungeonGenerator::Tick(float DeltaTime)
 		//방이 전부 생성되고 나서 생성이 되어야함.
 		for (USceneComponent* Element : SpawnPoints)
 		{
-			SpawnItems();
+			//SpawnItems();
 			SpawnChests();
 		}
 		CloseUnusedExits();
-		SpawnDoors();
+		//SpawnDoors();
 		//GetWorld()->GetTimerManager().SetTimer(UnusedHandle, this, &ADungeonGenerator::CloseUnusedExits, 1.0f, false);
 		//GetWorld()->GetTimerManager().SetTimer(DoorHandle, this, &ADungeonGenerator::SpawnDoors, 1.0f, false);
 		bDungeonRoomComplete = false;
@@ -86,6 +86,7 @@ void ADungeonGenerator::MyFunctionAfterDelay()
 
 void ADungeonGenerator::SpawnStarterRoom()
 {
+	//시작하는 방은 RoomAmount안하고 있음
 	AStarterRoom* SpawnedStarterRoom = this->GetWorld()->SpawnActor<AStarterRoom>(StartRoom);
 	SpawnedStarterRoom->SetActorLocation(this->GetActorLocation());
 	
@@ -110,24 +111,25 @@ void ADungeonGenerator::SpawnNextRoom()// 방번호랑 (방 전체 화살표 중에 어디로 �
 		bCanUseSpawnPoints = false;
 	}
 
-	if (RoomAmount % 10 == 0)//여기 잘 활용해서 사용하면 될듯 스페셜이나 보스룸
+	// 일반 방을 지정된 개수만큼 만들었고, 아직 스폰할 특수 방이 남았다면?  특수방 순서대로 만들어야  <- 지금은 전체 방 개수를 고려하고 있지않음 이거 생각해서 처리해야함
+	if (RoomsSpawnedInCurrentPhase >= RoomsPerPhase && CurrentSpecialRoomIdx < SpecialRoomsToBeSpawned.Num())
 	{
-		int32 SpecialRoomIndex = RandomStream.RandRange(0, SpecialRoomsToBeSpawned.Num() - 1);
-		LatestSpawnedRoom = this->GetWorld()->SpawnActor<ARoomBase>(RoomsToBeSpawned[SpecialRoomIndex]);
+		LatestSpawnedRoom = this->GetWorld()->SpawnActor<ARoomBase>(SpecialRoomsToBeSpawned[CurrentSpecialRoomIdx]);
+		bIsSpecialRoom = true; // (헤더에 bool 변수 추가 필요)
+		//RoomsPerPhase = 0;// 초기화 해줘야함인데 이게 문제는 지금 겹치는경우 쳐내고 있는건데 밑에서 해주자 아니네 취소되고 다시돌아와도 이 조건문이네
 	}
 	else
 	{
-		
+		int32 RoomIndex = RandomStream.RandRange(0, RoomsToBeSpawned.Num() - 1);
+		LatestSpawnedRoom = this->GetWorld()->SpawnActor<ARoomBase>(RoomsToBeSpawned[RoomIndex]);
+		bIsSpecialRoom = false;
 	}
 
-	int32 RoomIndex = RandomStream.RandRange(0, RoomsToBeSpawned.Num() - 1);
-	LatestSpawnedRoom = this->GetWorld()->SpawnActor<ARoomBase>(RoomsToBeSpawned[RoomIndex]);
 
 	int32 ExitIndex = RandomStream.RandRange(0, Exits.Num() - 1);
 	SelectedExitPoint = Exits[ExitIndex];//화살표임 SelectedExitPoint는 
 
 	//if(RoomsToBeSpawned)
-
 
 
 	LatestSpawnedRoom->SetActorLocation(SelectedExitPoint->GetComponentLocation()); // why no spawn? <- meshes didn't included
@@ -144,6 +146,14 @@ void ADungeonGenerator::SpawnNextRoom()// 방번호랑 (방 전체 화살표 중에 어디로 �
 
 	if (bCanSpawn)//이걸 통과해야지 실제로 맵에 생성이 됨
 	{
+		if (bIsSpecialRoom)
+		{
+			CurrentSpecialRoomIdx++;
+			RoomsSpawnedInCurrentPhase = 0; // 페이즈 초기화
+			DoorList.Add(SelectedExitPoint);//특수방 입구만 문 설치
+		}//가장큰 단점은 특수방의 개수와 마지막이 겹치는 경우도 이경우는 제대로 체크해야한다. 일단 내가 개발자니까 넘어가고 후에 사용자가 쓸때 못하게 막아야함
+
+
 		//Items
 		if (bCanUseSpawnPoints) // 이 방식은 RoomAmount가 하나 남았을때인데 다른방식으로 수정해야할듯 조건문을 보스방이라면 
 		{
@@ -153,7 +163,7 @@ void ADungeonGenerator::SpawnNextRoom()// 방번호랑 (방 전체 화살표 중에 어디로 �
 
 
 		//Doors
-		DoorList.Add(SelectedExitPoint);//Set Door SelectedExitPoint
+
 
 
 
@@ -232,33 +242,33 @@ void ADungeonGenerator::CloseUnusedExits()
 	{
 		AClosingWall* LatestClosingWallSpawned = GetWorld()->SpawnActor<AClosingWall>(ClosingWall);
 
-		FVector RelativeOffset(00.0f, -70.0f, 320.0f); // World Location <-just hard coding
+		//FVector RelativeOffset(0, 30, 0); // World Location <-just hard coding
 		//FVector WorldOffset = Element->GetComponentRotation().RotateVector(RelativeOffset);
 
-		LatestClosingWallSpawned->SetActorLocation(Element->GetComponentLocation() + RelativeOffset);//Why WorldOffset?
+		LatestClosingWallSpawned->SetActorLocation(Element->GetComponentLocation() - Element->GetForwardVector() * 20);//Why WorldOffset?
 		LatestClosingWallSpawned->SetActorRotation(FRotator(Element->GetComponentRotation()) + FRotator(0.0f, 90.0f, 0.0f));
 	}
 }
 
-void ADungeonGenerator::SpawnDoors()
-{
-	//GetCapsuleComponent()->OnComponentBeginOverlap.AddDynamic(this,&ACharacter::OnBeginOverlap);
-	//GetCapsuleComponent()->OnComponentEndOverlap.AddDynamic(this,&ACharacter::OnEndOverlap);
-	//Use tag and UFUNCTION()
-	//Use Cast<ADoor>
-	UE_LOG(LogTemp, Warning, TEXT("Spawn_Door"));
-	for (USceneComponent* Element : DoorList)// Player can open door by BeginOverlap
-	{
-		ADoor* LatestDoorSpawned = GetWorld()->SpawnActor<ADoor>(Door);// How to Change Something can interact or just Open<- Thinking  
-
-		FVector RelativeOffset(00.0f, -70.0f, 320.0f); // World Location <-just hard coding
-		//FVector WorldOffset = Element->GetComponentRotation().RotateVector(RelativeOffset);
-
-		LatestDoorSpawned->SetActorLocation(Element->GetComponentLocation() + RelativeOffset);//Why WorldOffset?
-		LatestDoorSpawned->SetActorRotation(FRotator(Element->GetComponentRotation()) + FRotator(0.0f, 90.0f, 0.0f));
-		
-	}
-}
+//void ADungeonGenerator::SpawnDoors()
+//{
+//	//GetCapsuleComponent()->OnComponentBeginOverlap.AddDynamic(this,&ACharacter::OnBeginOverlap);
+//	//GetCapsuleComponent()->OnComponentEndOverlap.AddDynamic(this,&ACharacter::OnEndOverlap);
+//	//Use tag and UFUNCTION()
+//	//Use Cast<ADoor>
+//	UE_LOG(LogTemp, Warning, TEXT("Spawn_Door"));
+//	for (USceneComponent* Element : DoorList)// Player can open door by BeginOverlap
+//	{
+//		ADoor* LatestDoorSpawned = GetWorld()->SpawnActor<ADoor>(Door);// How to Change Something can interact or just Open<- Thinking  
+//
+//		FVector RelativeOffset(00.0f, -70.0f, 320.0f); // World Location <-just hard coding
+//		//FVector WorldOffset = Element->GetComponentRotation().RotateVector(RelativeOffset);
+//
+//		LatestDoorSpawned->SetActorLocation(Element->GetComponentLocation() + RelativeOffset);//Why WorldOffset?
+//		LatestDoorSpawned->SetActorRotation(FRotator(Element->GetComponentRotation()) + FRotator(0.0f, 90.0f, 0.0f));
+//		
+//	}
+//}
 
 void ADungeonGenerator::SpawnItems()// 나중에 아이템들이 아닌 각 아이템 개수로도 가능할듯
 {
@@ -288,7 +298,7 @@ void ADungeonGenerator::SpawnChests()
 		ATreasureChestBase* LatestChestSpawned = this->GetWorld()->SpawnActor<ATreasureChestBase>(ItemSpawnBase);
 		LatestChestSpawned->SetActorLocation(SelectedSpawnPoint->GetComponentLocation() + FVector(0, 0, 100.0f));
 
-		SpawnPoints.Remove(SelectedSpawnPoint);//왜 . 이지 ->게 아니라
+		SpawnPoints.Remove(SelectedSpawnPoint);//왜 . 이지 ->게 아니라//이거 문제 있음 생각해봐야함
 
 		ChestAmount = ChestAmount - 1;
 	}

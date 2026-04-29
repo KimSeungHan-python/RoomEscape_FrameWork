@@ -9,8 +9,12 @@ AClosingWall::AClosingWall()
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
+
+	Pivot = CreateDefaultSubobject<USceneComponent>(TEXT("Pivot"));
+	Pivot->SetupAttachment(RootComponent);
+
 	ClosingWall = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("ClosingWall"));
-	ClosingWall->SetupAttachment(RootComponent);
+	ClosingWall->SetupAttachment(Pivot);
 
 }
 

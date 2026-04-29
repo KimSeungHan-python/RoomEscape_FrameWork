@@ -39,10 +39,11 @@ public:
 	TArray<TSubclassOf<ARoomBase>> RoomsToBeSpawned;
 
 	UPROPERTY(EditAnywhere, Category = "Rooms")
-	TArray<TSubclassOf<ARoomBase>> SpecialRoomsToBeSpawned;
+	TArray<TSubclassOf<ARoomBase>> SpecialRoomsToBeSpawned;//순차적으로 형성
 
 	UPROPERTY(EditAnywhere, Category = "Rooms")
 	TSubclassOf<ABossRoom> BossRoomToBeSpawned;
+
 
 	UPROPERTY(EditAnywhere, Category = "UnusedExitWall")
 	TSubclassOf<AClosingWall> ClosingWall;
@@ -55,6 +56,11 @@ public:
 
 	UPROPERTY(EditAnywhere, Category = "TreasureChest")
 	TSubclassOf<ATreasureChestBase> TreasureChestBase;
+
+
+	UPROPERTY(EditAnywhere, Category = "Dungeon Info")
+	int32 RoomsPerPhase; // 특수 방 사이사이에 생성될 일반 방의 개수
+
 	
 	UPROPERTY(EditAnywhere, Category = "Dungeon Info")
 	int32 ItemAmount;
@@ -71,6 +77,8 @@ public:
 	ARoomBase* LatestSpawnedRoom;
 
 	bool bCanSpawn;
+
+	bool bIsSpecialRoom;
 
 	USceneComponent* SelectedExitPoint;
 
@@ -99,6 +107,9 @@ public:
 	bool bDungeonRoomComplete = false;
 
 	bool bCanUseSpawnPoints = false;
+
+	int32 CurrentSpecialRoomIdx = 0; // 현재 몇 번째 특수 방을 만들 차례인지
+	int32 RoomsSpawnedInCurrentPhase = 0; // 현재 페이즈에서 일반 방이 몇 개 생겼는지
 
 	FTimerHandle UnusedHandle;
 	FTimerHandle DoorHandle;

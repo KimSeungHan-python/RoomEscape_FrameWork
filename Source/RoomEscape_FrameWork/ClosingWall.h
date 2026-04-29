@@ -26,5 +26,7 @@ protected:
 	UPROPERTY(VisibleAnywhere, Category = "Components")
 	UStaticMeshComponent* ClosingWall;
 
+	UPROPERTY(VisibleAnywhere, Category = "Components")
+	USceneComponent* Pivot;
 
 };
