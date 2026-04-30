@@ -44,11 +44,11 @@ void ADungeonGenerator::Tick(float DeltaTime)
 		//방이 전부 생성되고 나서 생성이 되어야함.
 		for (USceneComponent* Element : SpawnPoints)
 		{
-			//SpawnItems();
-			SpawnChests();
+			SpawnItems();
+			SpawnChests();//델리게이트 쓰고 싶은데 이러면 
 		}
-		CloseUnusedExits();
-		//SpawnDoors();
+		CloseUnusedExits();//문 닫기
+		SpawnDoors();
 		//GetWorld()->GetTimerManager().SetTimer(UnusedHandle, this, &ADungeonGenerator::CloseUnusedExits, 1.0f, false);
 		//GetWorld()->GetTimerManager().SetTimer(DoorHandle, this, &ADungeonGenerator::SpawnDoors, 1.0f, false);
 		bDungeonRoomComplete = false;
@@ -155,17 +155,15 @@ void ADungeonGenerator::SpawnNextRoom()// 방번호랑 (방 전체 화살표 중에 어디로 �
 
 
 		//Items
-		if (bCanUseSpawnPoints) // 이 방식은 RoomAmount가 하나 남았을때인데 다른방식으로 수정해야할듯 조건문을 보스방이라면 
+		if (!bCanUseSpawnPoints) // 이 방식은 RoomAmount가 하나 남았을때인데 다른방식으로 수정해야할듯 조건문을 보스방이라면 
 		{
 			LatestSpawnedRoom->FloorSpawnPoints->GetChildrenComponents(false, LatestRoomSpawnPoints);
-			SpawnPoints.Append(LatestRoomSpawnPoints);//아이템이나 Chest 생성 포인트들 
+			SpawnPoints.Append(LatestRoomSpawnPoints);//아이템이나 Chest 생성 포인트들
+			DoorList.Add(SelectedExitPoint);
 		}
 
 
 		//Doors
-
-
-
 
 		Exits.Remove(SelectedExitPoint);//Previous Point Remove
 
@@ -250,25 +248,23 @@ void ADungeonGenerator::CloseUnusedExits()
 	}
 }
 
-//void ADungeonGenerator::SpawnDoors()
-//{
-//	//GetCapsuleComponent()->OnComponentBeginOverlap.AddDynamic(this,&ACharacter::OnBeginOverlap);
-//	//GetCapsuleComponent()->OnComponentEndOverlap.AddDynamic(this,&ACharacter::OnEndOverlap);
-//	//Use tag and UFUNCTION()
-//	//Use Cast<ADoor>
-//	UE_LOG(LogTemp, Warning, TEXT("Spawn_Door"));
-//	for (USceneComponent* Element : DoorList)// Player can open door by BeginOverlap
-//	{
-//		ADoor* LatestDoorSpawned = GetWorld()->SpawnActor<ADoor>(Door);// How to Change Something can interact or just Open<- Thinking  
-//
-//		FVector RelativeOffset(00.0f, -70.0f, 320.0f); // World Location <-just hard coding
-//		//FVector WorldOffset = Element->GetComponentRotation().RotateVector(RelativeOffset);
-//
-//		LatestDoorSpawned->SetActorLocation(Element->GetComponentLocation() + RelativeOffset);//Why WorldOffset?
-//		LatestDoorSpawned->SetActorRotation(FRotator(Element->GetComponentRotation()) + FRotator(0.0f, 90.0f, 0.0f));
-//		
-//	}
-//}
+void ADungeonGenerator::SpawnDoors()
+{
+	//GetCapsuleComponent()->OnComponentBeginOverlap.AddDynamic(this,&ACharacter::OnBeginOverlap);
+	//GetCapsuleComponent()->OnComponentEndOverlap.AddDynamic(this,&ACharacter::OnEndOverlap);
+	//Use tag and UFUNCTION()
+	//Use Cast<ADoor>
+	UE_LOG(LogTemp, Warning, TEXT("Spawn_Door"));
+	for (USceneComponent* Element : DoorList)// Player can open door by BeginOverlap
+	{
+		ADoor* LatestDoorSpawned = GetWorld()->SpawnActor<ADoor>(Door);// How to Change Something can interact or just Open<- Thinking  
+
+
+		LatestDoorSpawned->SetActorLocation(Element->GetComponentLocation());//Why WorldOffset?
+		LatestDoorSpawned->SetActorRotation(FRotator(Element->GetComponentRotation()) + FRotator(0.0f, 90.0f, 0.0f));
+		
+	}
+}
 
 void ADungeonGenerator::SpawnItems()// 나중에 아이템들이 아닌 각 아이템 개수로도 가능할듯
 {
@@ -278,7 +274,10 @@ void ADungeonGenerator::SpawnItems()// 나중에 아이템들이 아닌 각 아이템 개수로도
 		int32 SpawnPointIndex = RandomStream.RandRange(0, SpawnPoints.Num() - 1);// 생성된 룸에서 스폰 포인트들
 		SelectedSpawnPoint = SpawnPoints[SpawnPointIndex];
 
-		ASpawnItemBase* LatestItemSpawned = this->GetWorld()->SpawnActor<ASpawnItemBase>(ItemSpawnBase);
+		//원한다면 랜덤으로 몇명나올지도 수정 가능/
+
+		int32 SpawnItemIndex = RandomStream.RandRange(0, ItemSpawnList.Num() - 1);//랜덤으로 뽑고 
+		ASpawnItemBase* LatestItemSpawned = this->GetWorld()->SpawnActor<ASpawnItemBase>(ItemSpawnList[SpawnItemIndex]);// 소환 
 		LatestItemSpawned->SetActorLocation(SelectedSpawnPoint->GetComponentLocation() + FVector(0, 0, 100.0f));
 
 		SpawnPoints.Remove(SelectedSpawnPoint);//왜 . 이지 ->게 아니라
@@ -295,7 +294,7 @@ void ADungeonGenerator::SpawnChests()
 		int32 SpawnPointIndex = RandomStream.RandRange(0, SpawnPoints.Num() - 1);// 생성된 룸에서 스폰 포인트들
 		SelectedSpawnPoint = SpawnPoints[SpawnPointIndex];
 
-		ATreasureChestBase* LatestChestSpawned = this->GetWorld()->SpawnActor<ATreasureChestBase>(ItemSpawnBase);
+		ATreasureChestBase* LatestChestSpawned = this->GetWorld()->SpawnActor<ATreasureChestBase>(TreasureChestBase);
 		LatestChestSpawned->SetActorLocation(SelectedSpawnPoint->GetComponentLocation() + FVector(0, 0, 100.0f));
 
 		SpawnPoints.Remove(SelectedSpawnPoint);//왜 . 이지 ->게 아니라//이거 문제 있음 생각해봐야함

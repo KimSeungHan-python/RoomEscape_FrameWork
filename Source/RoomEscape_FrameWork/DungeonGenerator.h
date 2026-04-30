@@ -52,7 +52,7 @@ public:
 	TSubclassOf<ADoor> Door;
 
 	UPROPERTY(EditAnywhere, Category = "SpawnItem")
-	TSubclassOf<ASpawnItemBase> ItemSpawnBase;
+	TArray<TSubclassOf<ASpawnItemBase>> ItemSpawnList;
 
 	UPROPERTY(EditAnywhere, Category = "TreasureChest")
 	TSubclassOf<ATreasureChestBase> TreasureChestBase;
@@ -95,6 +95,10 @@ public:
 	TArray<USceneComponent*> ClosingUnusedExitsList;
 
 	TArray<USceneComponent*> LatestRoomUnusedExitsList;
+
+	//UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "SpawnItem")
+	//TSubclassOf<ASpawnItemBase> LatestRoomUnusedExitsList;
+
 
 
 	FRandomStream RandomStream;
