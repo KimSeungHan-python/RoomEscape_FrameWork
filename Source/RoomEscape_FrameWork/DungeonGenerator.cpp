@@ -12,6 +12,7 @@
 #include "BossRoom.h"
 #include "Kismet/GameplayStatics.h"
 #include "StarterRoom.h"
+#include "MyGameInstance.h"
 
 // Sets default values
 ADungeonGenerator::ADungeonGenerator()
@@ -26,6 +27,25 @@ ADungeonGenerator::ADungeonGenerator()
 void ADungeonGenerator::BeginPlay()
 {
 	Super::BeginPlay();
+
+	if (UMyGameInstance* GI = GetGameInstance<UMyGameInstance>())
+	{
+		switch (GI->StartMode)
+		{
+		case EStartMode::MainMenu:
+			SetSeed();//맨 처음에만 입력을 받음 
+			//RuntimeSeed = Seed; // 유저 입력 사용
+			break;
+
+		case EStartMode::RestartSame:
+			Seed = GI->SavedSeed;
+			break;
+
+		case EStartMode::RestartNew:
+			Seed = -1;
+			break;
+		}
+	}
 	SetSeed();
 
 	SpawnStarterRoom();
@@ -42,10 +62,14 @@ void ADungeonGenerator::Tick(float DeltaTime)
 	if (bDungeonRoomComplete)
 	{
 		//방이 전부 생성되고 나서 생성이 되어야함.
-		for (USceneComponent* Element : SpawnPoints)
+		while (ItemAmount > 0 && SpawnPoints.Num() > 0)
 		{
 			SpawnItems();
-			SpawnChests();//델리게이트 쓰고 싶은데 이러면 
+		}
+
+		while (ChestAmount > 0 && SpawnPoints.Num() > 0)
+		{
+			SpawnChests();
 		}
 		CloseUnusedExits();//문 닫기
 		SpawnDoors();
@@ -58,17 +82,18 @@ void ADungeonGenerator::Tick(float DeltaTime)
 
 void ADungeonGenerator::SetSeed()// Why make this? -> Answer: Same Seed = Same Map
 {
-	int32 Results;
 	if (Seed == -1)
 	{
-		Results = FMath::Rand();
+		Seed = FMath::Rand();
 	}
-	else
+
+	if (UMyGameInstance* GI = GetGameInstance<UMyGameInstance>())
 	{
-		Results = Seed;
+		GI->SavedSeed = Seed;//Seed값 저장
 	}
-	RandomStream.Initialize(Results);
-	GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Red, FString::Printf(TEXT("%d"), Results));
+
+	RandomStream.Initialize(Seed);
+	GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Red, FString::Printf(TEXT("%d"), Seed));
 }
 
 void ADungeonGenerator::MyFunctionAfterDelay()

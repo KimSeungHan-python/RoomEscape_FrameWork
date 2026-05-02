@@ -8,7 +8,7 @@ public class RoomEscape_FrameWorkTarget : TargetRules
 	public RoomEscape_FrameWorkTarget(TargetInfo Target) : base(Target)
 	{
 		Type = TargetType.Game;
-		DefaultBuildSettings = BuildSettingsVersion.V6;
+		DefaultBuildSettings = BuildSettingsVersion.Latest;
 
 		ExtraModuleNames.AddRange( new string[] { "RoomEscape_FrameWork" } );
 	}

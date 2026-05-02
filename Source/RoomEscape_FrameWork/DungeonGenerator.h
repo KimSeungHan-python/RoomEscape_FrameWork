@@ -106,6 +106,8 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Dungeon Info")
 	int32 Seed;
 
+	int32 RuntimeSeed;
+
 	FTimerHandle SpawningRoomHandle;
 
 	bool bDungeonRoomComplete = false;
