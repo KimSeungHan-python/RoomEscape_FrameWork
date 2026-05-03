@@ -27,4 +27,8 @@ public:
     EStartMode StartMode = EStartMode::MainMenu;
 
     int32 SavedSeed = -1;
+
+    // 밝기 값을 저장할 변수 (기본값 1.0)
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Settings")
+    float SavedBrightness = 0.1f;
 };

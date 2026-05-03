@@ -10,6 +10,10 @@
 #include "EndWidget.h"
 #include "PauseWidget.h"
 #include "MyHUD.h"
+#include "MyGameInstance.h"
+#include "EngineUtils.h" // TActorIterator를 사용하기 위해 필요
+#include "Engine/DirectionalLight.h"
+#include "Components/LightComponent.h"
 
 AMyPlayerController::AMyPlayerController()
 {
@@ -32,14 +36,9 @@ void AMyPlayerController::BeginPlay()
         }
     }
 
-    //if (HUDWidgetClass)
-    //{
-    //    HUDWidget = CreateWidget<AMyHUD>(this, HUDWidgetClass);
-    //    if (HUDWidget)
-    //    {
-    //        HUDWidget->AddToViewport();
-    //    }
-    //}
+    GI = Cast<UMyGameInstance>(GetGameInstance());
+    ApplySavedBrightness();
+
 }
 
 
@@ -73,28 +72,45 @@ void AMyPlayerController::OnUnPossess()
     Super::OnUnPossess();
 }
 
-void AMyPlayerController::TogglePauseMenu()
+void AMyPlayerController::ApplySavedBrightness()//밝기 조절 
 {
-    // 위젯이 아직 생성 안 된 경우 → 최초 1회 생성
-    if (!CurrentPauseWidget)
+    if (GI)
     {
-        if (PauseWidgetClass)
-        {
-            CurrentPauseWidget = CreateWidget<UPauseWidget>(this, PauseWidgetClass);
+        float SavedValue = GI->SavedBrightness;
+        float NewIntensity = SavedValue * 10.0f;
 
-            if (CurrentPauseWidget)
+        for (TActorIterator<ADirectionalLight> It(GetWorld()); It; ++It)
+        {
+            if (ADirectionalLight* SunLight = *It)
             {
-                CurrentPauseWidget->AddToViewport();
-                CurrentPauseWidget->SetVisibility(ESlateVisibility::Hidden);
+                SunLight->GetLightComponent()->SetIntensity(NewIntensity);
             }
         }
     }
+}
 
-    if (!CurrentPauseWidget)
-    {
-        UE_LOG(LogTemp, Warning, TEXT("Return"));
-        return;
-    }
+void AMyPlayerController::TogglePauseMenu()
+{
+    //// 위젯이 아직 생성 안 된 경우 → 최초 1회 생성
+    //if (!CurrentPauseWidget)
+    //{
+    //    if (PauseWidgetClass)
+    //    {
+    //        CurrentPauseWidget = CreateWidget<UPauseWidget>(this, PauseWidgetClass);
+
+    //        if (CurrentPauseWidget)
+    //        {
+    //            CurrentPauseWidget->AddToViewport();
+    //            CurrentPauseWidget->SetVisibility(ESlateVisibility::Hidden);
+    //        }
+    //    }
+    //}
+
+    //if (!CurrentPauseWidget)
+    //{
+    //    UE_LOG(LogTemp, Warning, TEXT("Return"));
+    //    return;
+    //}
 
     // 현재 상태 확인
     if (CurrentPauseWidget->IsVisible())
@@ -105,6 +121,8 @@ void AMyPlayerController::TogglePauseMenu()
 
         SetInputMode(FInputModeGameAndUI());
         SetShowMouseCursor(false);
+
+        //SetPause(false);
 
         //UGameplayStatics::SetGamePaused(this, false); // 기본적으로 모든 InputAction 막힘
     }
@@ -123,6 +141,7 @@ void AMyPlayerController::TogglePauseMenu()
         SetShowMouseCursor(true);
 
         //UGameplayStatics::SetGamePaused(this, true);
+        //SetPause(true);
     }
 }
 
@@ -149,15 +168,18 @@ void AMyPlayerController::ShowGameStartUI()
 {
     if (GameStartWidgetClass)
     {
-        UStartWidget* Widget = CreateWidget<UStartWidget>(this, GameStartWidgetClass);
-        if (Widget)
+        StartWidget = CreateWidget<UStartWidget>(this, GameStartWidgetClass);
+        if (StartWidget)
         {
-            Widget->AddToViewport();
+            StartWidget->AddToViewport();
 
-            Widget->DOnStartGameClicked.AddDynamic(this, &AMyPlayerController::HandleStart);
 
             SetShowMouseCursor(true);
             SetInputMode(FInputModeUIOnly());
+
+            StartWidget->DOnStartGameClicked.AddDynamic(this, &AMyPlayerController::HandleStart);
+            //SetPause(true);
+
         }
     }
 }
@@ -172,8 +194,14 @@ void AMyPlayerController::HandleRestart()
 
 void AMyPlayerController::HandleStart()
 {
+    //SetPause(false);
+
+    UE_LOG(LogTemp, Warning, TEXT("StartWidget"));
     SetInputMode(FInputModeGameOnly());
     SetShowMouseCursor(false);
+    StartWidget->RemoveFromParent();
+    //UGameplayStatics::OpenLevel(this, FName(*GetWorld()->GetName()));
+
 }
 
 

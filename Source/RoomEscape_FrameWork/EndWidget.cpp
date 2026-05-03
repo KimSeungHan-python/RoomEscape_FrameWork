@@ -24,7 +24,7 @@ void UEndWidget::OnReGameClicked()
     }
     DOnReGameClicked.Broadcast();
 
-    UGameplayStatics::OpenLevel(this, FName(*GetWorld()->GetName()));
+    //UGameplayStatics::OpenLevel(this, FName(*GetWorld()->GetName()));
 }
 
 void UEndWidget::OnNewGameClicked()
@@ -34,7 +34,7 @@ void UEndWidget::OnNewGameClicked()
         GI->StartMode = EStartMode::RestartNew;
     }
     DOnNewGameClicked.Broadcast();
-    UGameplayStatics::OpenLevel(this, FName(*GetWorld()->GetName()));
+    //UGameplayStatics::OpenLevel(this, FName(*GetWorld()->GetName()));
 }
 
 void UEndWidget::OnQuitClicked()

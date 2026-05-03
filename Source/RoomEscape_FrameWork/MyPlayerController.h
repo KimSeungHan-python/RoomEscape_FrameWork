@@ -12,6 +12,8 @@ class UInputAction;
 class UPauseWidget;
 class AHUD;
 class AMyHUD;
+class  UStartWidget;
+class UMyGameInstance;
 /**
  * 
  */
@@ -27,7 +29,10 @@ public:
     UFUNCTION()
     void HandleRestart();
 
+    UFUNCTION()
     void HandleStart();
+
+
 
 protected:
     AMyPlayerController();
@@ -56,9 +61,17 @@ protected:
     UPauseWidget* CurrentPauseWidget;
     AMyHUD* HUDWidget;
 
+    UPROPERTY()
+    UStartWidget* StartWidget;
+
+    UPROPERTY()
+    UMyGameInstance* GI;
+
 
     void TogglePauseMenu();
     virtual void SetupInputComponent() override;
     virtual void OnPossess(APawn* aPawn) override;
     virtual void OnUnPossess() override;
+
+    void ApplySavedBrightness();
 };

@@ -10,7 +10,7 @@ void UStartWidget::OnGameStartClicked()
 {
 	if (UMyGameInstance* GI = GetGameInstance<UMyGameInstance>())
 	{
-		GI->StartMode = EStartMode::RestartNew;
+		GI->StartMode = EStartMode::RestartSame;
 	}
 	DOnStartGameClicked.Broadcast();
 	//RemoveFromParent();//Widget제거하고 

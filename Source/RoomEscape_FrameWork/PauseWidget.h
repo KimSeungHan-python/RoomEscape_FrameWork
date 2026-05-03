@@ -12,6 +12,8 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnPauseReGameClicked);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnPauseNewGameClicked);
 //class UButton;
 class USlider;
+class UMyGameInstance;
+class APlayerController;
 /**
  * 
  */
@@ -33,6 +35,13 @@ public:
     // UI 디자이너에 추가할 슬라이더 바인딩
     UPROPERTY(meta = (BindWidget))
     USlider* BrightnessSlider;
+
+    UPROPERTY()
+    UMyGameInstance* GI;
+
+    UPROPERTY()
+    APlayerController* PC;
+
 protected:
 
     // 위젯이 생성될 때 C++와 BP를 연결해주는 초기화 함수
@@ -43,6 +52,9 @@ protected:
     // 슬라이더 값이 변경될 때 호출될 함수
     UFUNCTION(BlueprintCallable)
     void OnBrightnessChanged(float Value);
+
+    UFUNCTION(BlueprintCallable)
+    void ApplyChangedBrightness(float Value);
 
     //virtual void NativeConstruct() override;
 
