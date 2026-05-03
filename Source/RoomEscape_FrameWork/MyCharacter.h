@@ -36,7 +36,12 @@ protected:
 	/** 쓰러진 후 일정 시간 뒤에 실제로 캐릭터를 파괴하는 함수 */
 	void FinishDeath();
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Lighting")
+	class UPointLightComponent* PlayerLight;
+
 private:
+
+
 	/** 타이머 정보를 저장할 핸들 */
 	FTimerHandle DeathTimerHandle;
 };

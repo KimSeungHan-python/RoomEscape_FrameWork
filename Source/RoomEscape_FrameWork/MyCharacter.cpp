@@ -7,7 +7,7 @@
 #include "TimerManager.h" 
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Components/SkeletalMeshComponent.h"
-
+#include "Components/PointLightComponent.h"
 
 
 
@@ -17,6 +17,21 @@ AMyCharacter::AMyCharacter()
  	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
+    PlayerLight = CreateDefaultSubobject<UPointLightComponent>(TEXT("PlayerLight"));
+
+    // 2. 루트 컴포넌트(캡슐)에 부착하여 플레이어를 따라다니게 함
+    PlayerLight->SetupAttachment(RootComponent);
+
+    // 3. 탑뷰에서 조명이 바닥을 예쁘게 비추도록 Z축(위쪽)으로 살짝 올려줍니다.
+    // (발밑에 있으면 그림자가 이상하게 질 수 있습니다)
+    PlayerLight->SetRelativeLocation(FVector(0.0f, 0.0f, 150.0f));
+
+    // 4. 라이트 기본 세팅
+    PlayerLight->Intensity = 5000.0f;           // 빛의 밝기 (언리얼 5 루멘 기준 꽤 높아야 할 수 있음)
+    PlayerLight->AttenuationRadius = 800.0f;    // 빛이 닿는 최대 거리 (시야 범위)
+    PlayerLight->LightColor = FColor::White;    // 빛의 색상 (약간 노란빛을 주려면 FColor(255, 230, 200) 추천)
+    PlayerLight->bUseTemperature = true;        // 색온도 사용 (선택 사항)
+    PlayerLight->Temperature = 6500.0f;         // 색온도 조절
 }
 
 // Called when the game starts or when spawned
@@ -24,6 +39,7 @@ void AMyCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 	
+
 }
 
 // Called every frame

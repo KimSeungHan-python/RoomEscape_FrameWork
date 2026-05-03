@@ -6,13 +6,25 @@
 #include "Components/TextBlock.h"
 #include "Components/Image.h"
 
-void UMainWidget::UpdateHP(float CurrentHP, float MaxHP)
+void UMainWidget::UpdateHP(int CurrentHP, int MaxHP)
 {
 	if (HPBar)
 	{
 		// 프로그레스 바는 0.0 ~ 1.0 사이의 비율을 사용합니다.
-		float HealthRatio = (MaxHP > 0.0f) ? (CurrentHP / MaxHP) : 0.0f;
+		//float HealthRatio = (MaxHP > 0.0f) ? (CurrentHP / MaxHP) : 0.0f;
+		float HealthRatio = 1.0f;
+		UE_LOG(LogTemp, Warning, TEXT("%f"), HealthRatio);
+
+		if (CurrentHP >= 0)
+		{
+			HealthRatio = (float)CurrentHP / (float)MaxHP;
+		}
 		HPBar->SetPercent(HealthRatio);
+	}
+
+	if (!HPBar)
+	{
+		UE_LOG(LogTemp, Error, TEXT("HPBar is NULL"));
 	}
 }
 
@@ -20,6 +32,7 @@ void UMainWidget::UpdateAmmo(int32 CurrentAmmo, int32 MaxAmmo)
 {
 	if (AmmoText)//알아서 처리해주는데 
 	{
+		UE_LOG(LogTemp, Warning, TEXT("%d"), CurrentAmmo);
 		// "30 / 120" 형태로 텍스트를 만들어 적용합니다.
 		FString AmmoString = FString::Printf(TEXT("%d / %d"), CurrentAmmo, MaxAmmo);//나쁘지 않음 
 		AmmoText->SetText(FText::FromString(AmmoString));

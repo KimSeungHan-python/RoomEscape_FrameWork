@@ -14,7 +14,7 @@ void UStartWidget::OnGameStartClicked()
 	}
 	DOnStartGameClicked.Broadcast();
 	//RemoveFromParent();//Widget제거하고 
-	UGameplayStatics::OpenLevel(this, FName(*GetWorld()->GetName()));
+	//UGameplayStatics::OpenLevel(this, FName(*GetWorld()->GetName()));
 }
 
 void UStartWidget::OnQuitClicked()

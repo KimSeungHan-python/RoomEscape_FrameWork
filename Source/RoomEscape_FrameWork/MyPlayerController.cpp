@@ -106,7 +106,7 @@ void AMyPlayerController::TogglePauseMenu()
         SetInputMode(FInputModeGameAndUI());
         SetShowMouseCursor(false);
 
-        UGameplayStatics::SetGamePaused(this, false); // 기본적으로 모든 InputAction 막힘
+        //UGameplayStatics::SetGamePaused(this, false); // 기본적으로 모든 InputAction 막힘
     }
     else
     {
@@ -122,7 +122,7 @@ void AMyPlayerController::TogglePauseMenu()
         SetInputMode(FInputModeGameAndUI());
         SetShowMouseCursor(true);
 
-        UGameplayStatics::SetGamePaused(this, true);
+        //UGameplayStatics::SetGamePaused(this, true);
     }
 }
 
@@ -154,7 +154,7 @@ void AMyPlayerController::ShowGameStartUI()
         {
             Widget->AddToViewport();
 
-            Widget->DOnStartGameClicked.AddDynamic(this, &AMyPlayerController::HandleRestart);
+            Widget->DOnStartGameClicked.AddDynamic(this, &AMyPlayerController::HandleStart);
 
             SetShowMouseCursor(true);
             SetInputMode(FInputModeUIOnly());
@@ -169,4 +169,11 @@ void AMyPlayerController::HandleRestart()
 
     UGameplayStatics::OpenLevel(this, FName(*GetWorld()->GetName()));
 }
+
+void AMyPlayerController::HandleStart()
+{
+    SetInputMode(FInputModeGameOnly());
+    SetShowMouseCursor(false);
+}
+
 

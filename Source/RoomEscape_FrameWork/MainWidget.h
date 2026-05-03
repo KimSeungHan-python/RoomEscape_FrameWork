@@ -34,7 +34,7 @@ protected:
 public:
 	// 외부(플레이어 캐릭터 등)에서 UI를 업데이트할 때 부를 함수들
 	UFUNCTION(BlueprintCallable, Category = "HUD|Status")
-	void UpdateHP(float CurrentHP, float MaxHP);
+	void UpdateHP(int CurrentHP, int MaxHP);
 
 	UFUNCTION(BlueprintCallable, Category = "HUD|Status")
 	void UpdateAmmo(int32 CurrentAmmo, int32 MaxAmmo);

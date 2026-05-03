@@ -27,6 +27,8 @@ public:
     UFUNCTION()
     void HandleRestart();
 
+    void HandleStart();
+
 protected:
     AMyPlayerController();
     virtual void BeginPlay() override;

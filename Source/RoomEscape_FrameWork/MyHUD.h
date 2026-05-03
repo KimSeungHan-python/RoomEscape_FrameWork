@@ -21,7 +21,7 @@ public:
 	TSubclassOf<UMainWidget> MainWidgetClass;
 
 	// 화면에 띄워진 위젯을 저장해 둘 포인터 (나중에 캐릭터가 이 위젯에 접근할 때 씁니다)
-	UPROPERTY()
+	UPROPERTY(BlueprintReadOnly)
 	UMainWidget* MainWidget;
 
 protected:
